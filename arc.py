@@ -117,7 +117,7 @@ def step_cb(action, detail, status):
 # ── Paths ─────────────────────────────────────────────────────────────────────
 HERE         = os.path.dirname(os.path.abspath(__file__))
 SESSIONS_DIR = os.path.join(HERE, "sessions")
-PROFILE_FILE = os.path.expanduser("~/.arc/profile.json")
+PROFILE_FILE = os.path.join(HERE, "profile.json")
 WORK_DIR     = os.path.join(HERE, "workspace")
 
 def load_profile():
@@ -254,32 +254,50 @@ async def do_run():
     print(DIV2)
     sp()
 
-    await run_agent(
-        start_url=url,
-        user_folder=WORK_DIR,
-        headless=False,
-        timeout=120000,
-        identity_override=identity,
-        session_name=session,
-        step_callback=step_cb,
-        record_video=record,
-    )
-
-    # Screenshot at end
-    sp(); print(DIV2)
-    shot = os.path.join(WORK_DIR, f"screenshot_{int(time.time())}.png")
     try:
-        from browse import Browser
-        # agent already closed browser, so we note path only
-        ok(f"Run complete.")
-        info(f"Workspace: {rc(CYN, WORK_DIR)}")
-    except: pass
-    sp()
+        await run_agent(
+            start_url=url,
+            user_folder=WORK_DIR,
+            headless=False,
+            timeout=120000,
+            identity_override=identity,
+            session_name=session,
+            step_callback=step_cb,
+            record_video=record,
+        )
+        sp(); print(DIV2)
+        ok(f"Run complete!")
+        info(f"Workspace : {rc(CYN, WORK_DIR)}")
+        if record:
+            info(f"Recording : {rc(CYN, os.path.join(WORK_DIR, 'recordings'))}")
+        sp()
+
+    except KeyboardInterrupt:
+        sp(); print(DIV2)
+        warn("Stopped by user.")
+        sp()
+
+    except Exception as e:
+        sp(); print(DIV2)
+        print(f"  {rc(RED,b('  Error'))}  {rc(YLW, str(e)[:120])}")
+        print()
+        print(f"  {rc(DIM2,'What to try:')}")
+        hints = [
+            "Check your internet connection",
+            "Make sure the URL is correct and accessible",
+            "If Google Form — try saving a fresh session (option 2)",
+            "If rate limited — wait 30s and try again",
+            "Check your GROQ_API key in .env",
+        ]
+        for h in hints:
+            print(f"    {rc(DIM2,'›')} {d(h)}")
+        print(DIV2)
+        sp()
 
 
 async def do_session():
-    from save_session import main as sm
-    await sm()
+    from save_session import record_session
+    await record_session()
 
 
 def do_profile():
@@ -297,6 +315,10 @@ def do_profile():
         ("college",       "College / University"),
         ("degree",        "Degree"),
         ("address",       "City / Address"),
+        ("github",        "GitHub URL"),
+        ("linkedin",      "LinkedIn URL"),
+        ("tech_stack",    "Tech stack (Python, JS, etc.)"),
+        ("about",         "About yourself (1-2 lines)"),
     ]
     for key, lbl in fields:
         bio[key] = ask(lbl, bio.get(key,""))
@@ -371,4 +393,5 @@ async def do_run_direct(url):
     )
 
 
-main()
+if __name__ == "__main__":
+    main()

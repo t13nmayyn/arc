@@ -1,0 +1,20 @@
+cat > .gitignore << 'EOF'
+# secrets
+.env
+*.json
+
+# sessions and workspace
+sessions/
+workspace/
+__pycache__/
+*.pyc
+*.pyo
+
+# python
+venv/
+.venv/
+
+# os
+.DS_Store
+Thumbs.db
+EOF
